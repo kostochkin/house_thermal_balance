@@ -17,7 +17,8 @@ test('programs: tOut code compiles and evaluates as a function of time', () => {
 });
 
 test('programs: daily sine tOut preset computes semi-amplitude from mean', () => {
-  // preset formula: amp = (3.5 + 0.015 * mean**2) / 2, mean = -10 -> amp = 2.5
+  // preset formula: amp = max(3.5, min(-0.16*mean² + 0.54*mean + 5.2, 13)),
+  // mean = -10 -> parabola = -16.2 -> clamped to the floor amp = 3.5
   const preset = TOUT_PRESETS.find(p => p.name === 'Daily sine');
   assert.ok(preset, 'preset "Daily sine" must exist');
   const c = compileInputs({ tOutCode: preset.code, tGroundCode: 'return 8;' });
@@ -26,9 +27,20 @@ test('programs: daily sine tOut preset computes semi-amplitude from mean', () =>
   const peak = 14.5 * 3600;
   const trough = 2.5 * 3600;
   const inflection = 8.5 * 3600;
-  assert.equal(Math.round(c.tOut(peak) * 100) / 100, -7.5);
-  assert.equal(Math.round(c.tOut(trough) * 100) / 100, -12.5);
+  assert.equal(Math.round(c.tOut(peak) * 100) / 100, -6.5);
+  assert.equal(Math.round(c.tOut(trough) * 100) / 100, -13.5);
   assert.equal(Math.round(c.tOut(inflection) * 100) / 100, -10);
+});
+
+test('programs: daily sine amp clamp — parabola inside bounds at mean 0', () => {
+  const preset = TOUT_PRESETS.find(p => p.name === 'Daily sine');
+  const code = preset.code.replace('const mean = -10;', 'const mean = 0;');
+  const c = compileInputs({ tOutCode: code, tGroundCode: 'return 8;' });
+  assert.deepEqual(c.errors, []);
+  // parabola at mean = 0: 5.2 — inside [3.5, 13], no clamping
+  assert.equal(Math.round(c.tOut(14.5 * 3600) * 100) / 100, 5.2);
+  assert.equal(Math.round(c.tOut(2.5 * 3600) * 100) / 100, -5.2);
+  assert.equal(Math.round(c.tOut(8.5 * 3600) * 100) / 100, 0);
 });
 
 test('programs: syntax errors are reported, not thrown', () => {

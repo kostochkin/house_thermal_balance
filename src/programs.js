@@ -86,10 +86,11 @@ export const TOUT_PRESETS = [
   {
     name: 'Daily sine',
     code: `// Daily street temperature cycle: peak at 14:30, trough at 02:30.
-// Semi-amplitude grows with cold: A = (3.5 + 0.015·mean²)/2 —
-// at mean = -10 this is 2.5 °C.
-const mean = -10;                          // average temperature, °C
-const amp = (3.5 + 0.015 * mean ** 2) / 2; // semi-amplitude, °C
+// Semi-amplitude is a downward parabola of the mean, clamped to [3.5, 13] °C:
+//   A = max(3.5, min(-0.16·mean² + 0.54·mean + 5.2, 13))
+const mean = -10;                                          // average temperature, °C
+const parabola = -0.16 * mean ** 2 + 0.54 * mean + 5.2;    // parabola value, °C
+const amp = Math.max(3.5, Math.min(parabola, 13));         // semi-amplitude, °C
 return mean + amp * Math.cos((t / 3600 - 14.5) * Math.PI / 12);`,
   },
   {
