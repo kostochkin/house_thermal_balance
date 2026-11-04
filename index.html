@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Thermal Balance · RK4</title>
+  <script src="vendor/chart.umd.min.js"></script>
+  <script src="vendor/chartjs-plugin-zoom.umd.min.js"></script>
+  <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+  <header>
+    <h1>House Thermal Balance · RK4</h1>
+    <div class="actions">
+      <button id="btn-run" class="primary">▶ Run</button>
+      <button id="btn-save">💾 Save</button>
+      <button id="btn-load">📂 Load</button>
+      <button id="btn-reset">↺ Reset</button>
+      <input type="file" id="file-input" accept=".json" hidden>
+    </div>
+  </header>
+
+  <main>
+    <aside id="controls">
+      <section>
+        <h2>Simulation Parameters</h2>
+        <div class="param-grid">
+          <label for="in-dt">Step dt, s</label>
+          <input id="in-dt" type="number" value="60" min="1">
+          <label for="in-steps">Steps</label>
+          <input id="in-steps" type="number" value="20160" min="1">
+        </div>
+      </section>
+
+      <section>
+        <h2>Environment Temperatures</h2>
+        <div class="param-grid">
+          <label for="sel-tout">Street Preset</label>
+          <select id="sel-tout"></select>
+          <label for="in-tout-code">tOut(t) → °C</label>
+        </div>
+        <textarea id="in-tout-code" rows="3" spellcheck="false"></textarea>
+        <div class="param-grid">
+          <label for="sel-tground">Ground Preset</label>
+          <select id="sel-tground"></select>
+          <label for="in-tground-code">tGround(t) → °C</label>
+        </div>
+        <textarea id="in-tground-code" rows="3" spellcheck="false"></textarea>
+        <p class="hint">The function body takes time t (seconds since start). Return a number in °C.</p>
+      </section>
+
+      <section>
+        <h2>Heating Control</h2>
+        <div class="param-grid">
+          <label for="sel-control">Preset</label>
+          <select id="sel-control"></select>
+        </div>
+        <textarea id="in-control-code" rows="8" spellcheck="false"></textarea>
+        <p class="hint">control(t, T, state, n) is called once per step. T is node temperatures, state persists between steps, n is node count. Return { q: [...] } (W per node) or nothing.</p>
+      </section>
+
+      <section>
+        <h2>Nodes</h2>
+        <table class="grid" id="nodes-table">
+          <thead><tr>
+            <th>Node</th><th>C, MJ/K</th><th>T₀, °C</th><th></th><th></th>
+          </tr></thead>
+          <tbody id="nodes-body"></tbody>
+        </table>
+        <button id="btn-add-node">＋ Node</button>
+      </section>
+
+      <section>
+        <h2>Conductance Matrix K, W/K</h2>
+        <div class="k-scroll"><table class="grid" id="k-matrix"></table></div>
+      </section>
+
+      <dialog id="eq-dialog">
+        <form method="dialog">
+          <h3>Equilibrium</h3>
+          <label>Node: <b id="eq-node"></b></label>
+          <label>Target T, °C:
+            <input id="eq-target" class="num" type="number" step="0.5">
+          </label>
+          <label>Power Source:
+            <select id="eq-source"></select>
+          </label>
+          <p class="hint">The target node is fixed at the target T, power is matched in the source node, T₀ of other nodes is taken from the equilibrium.</p>
+          <div class="eq-actions">
+            <button class="primary" value="apply">Apply</button>
+            <button value="cancel">Cancel</button>
+          </div>
+        </form>
+      </dialog>
+
+      <div id="errors"></div>
+    </aside>
+
+    <section id="plot">
+      <div class="chart-toolbar">
+        <button id="btn-reset-zoom" title="Reset chart zoom">⟲ Reset zoom</button>
+      </div>
+      <div class="chart-wrap"><canvas id="temp-chart"></canvas></div>
+      <div id="status"></div>
+    </section>
+  </main>
+
+  <script type="module" src="src/ui.js"></script>
+</body>
+</html>

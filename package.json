@@ -1,0 +1,9 @@
+{
+  "name": "teplo",
+  "version": "0.1.0",
+  "description": "House thermal balance simulator (RK4)",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/"
+  }
+}
